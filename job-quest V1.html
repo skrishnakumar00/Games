@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Quest</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; }
+  
+  .header { background: #1a1a2e; color: white; padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+  .game-title { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+  .countdown { font-size: 13px; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; }
+  .countdown span { font-weight: 600; color: #fbbf24; }
+  .overall-bar-wrap { display: flex; align-items: center; gap: 12px; }
+  .overall-label { font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #34d399; border-radius: 3px; transition: width 0.4s ease; }
+  .overall-pct { font-size: 12px; color: rgba(255,255,255,0.8); min-width: 32px; text-align: right; }
+
+  .who-bar { background: #16213e; padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 12px; }
+  .who-label { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .who-btn { font-size: 12px; padding: 3px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; }
+  .who-btn.active { background: #534AB7; border-color: #534AB7; color: white; }
+
+  .main { padding: 1.5rem; max-width: 720px; margin: 0 auto; }
+
+  .level-card { background: white; border-radius: 12px; border: 1px solid #e5e3dd; margin-bottom: 1rem; overflow: hidden; transition: box-shadow 0.2s; }
+  .level-card.locked { opacity: 0.5; }
+  .level-card.completed { border-color: #a7f3d0; }
+
+  .level-header { padding: 1rem 1.25rem; cursor: pointer; display: flex; align-items: center; gap: 12px; user-select: none; }
+  .level-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .level-num.locked { background: #e5e3dd; color: #999; }
+  .level-num.active { background: #EDE9FF; color: #534AB7; }
+  .level-num.completed { background: #d1fae5; color: #065f46; }
+
+  .level-info { flex: 1; }
+  .level-name { font-size: 15px; font-weight: 500; }
+  .level-sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .level-xp-badge { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #f0edff; color: #534AB7; white-space: nowrap; }
+  .level-xp-badge.completed { background: #d1fae5; color: #065f46; }
+  .level-xp-badge.locked { background: #f0f0f0; color: #aaa; }
+  .chevron { font-size: 18px; color: #aaa; transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .level-body { border-top: 1px solid #f0ede8; padding: 0 1.25rem; max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.2s; }
+  .level-body.open { max-height: 800px; padding: 1rem 1.25rem; }
+
+  .level-goal { font-size: 13px; color: #555; background: #faf9f7; border-radius: 8px; padding: 0.6rem 1rem; margin-bottom: 1rem; border-left: 3px solid #c4b5fd; }
+  .level-goal strong { color: #3730a3; }
+
+  .level-xp-bar { margin-bottom: 1rem; }
+  .xp-bar-labels { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 4px; }
+  .xp-bar-track { height: 8px; background: #f0ede8; border-radius: 4px; overflow: hidden; }
+  .xp-bar-fill { height: 100%; background: #7c3aed; border-radius: 4px; transition: width 0.4s ease; }
+  .xp-bar-fill.complete { background: #059669; }
+
+  .mission-row { display: flex; align-items: flex-start; gap: 12px; padding: 0.65rem 0; border-bottom: 1px solid #f5f3f0; }
+  .mission-row:last-child { border-bottom: none; }
+  .mission-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #d1d5db; cursor: pointer; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: white; }
+  .mission-check.done { background: #059669; border-color: #059669; }
+  .mission-check.done::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .locked .mission-check { cursor: not-allowed; border-color: #e5e3dd; }
+  .mission-text { flex: 1; font-size: 14px; line-height: 1.5; color: #333; }
+  .mission-text.done { color: #aaa; text-decoration: line-through; }
+  .mission-xp { font-size: 12px; font-weight: 600; color: #7c3aed; background: #f0edff; padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+  .mission-xp.done { color: #059669; background: #d1fae5; }
+
+  .timeline-tag { font-size: 11px; color: #888; background: #f5f3f0; border-radius: 6px; padding: 2px 8px; display: inline-block; margin-top: 0.5rem; }
+
+  .reward-box { margin-top: 1rem; background: #fffbeb; border-radius: 8px; padding: 0.75rem 1rem; border: 1px solid #fde68a; font-size: 13px; color: #92400e; }
+  .reward-box strong { color: #78350f; }
+
+  .completed-stamp { text-align: center; padding: 0.5rem; font-size: 13px; color: #059669; font-weight: 500; }
+
+  .trophy-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; border-radius: 12px; padding: 2rem; text-align: center; margin-bottom: 1rem; }
+  .trophy-icon { font-size: 48px; margin-bottom: 0.5rem; }
+  .trophy-title { font-size: 20px; font-weight: 600; margin-bottom: 0.25rem; }
+  .trophy-sub { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+  .status-msg { text-align: center; font-size: 12px; color: #aaa; padding: 0.5rem; min-height: 20px; }
+  .status-msg.saving { color: #7c3aed; }
+  .status-msg.saved { color: #059669; }
+  .status-msg.error { color: #dc2626; }
+
+  .parallel-tag { font-size: 11px; background: #fff3cd; color: #856404; border-radius: 6px; padding: 2px 8px; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="game-title">🎯 Job Quest</div>
+    <div class="countdown">Deadline: Jul 31 &nbsp;|&nbsp; <span id="countdown">...</span></div>
+  </div>
+  <div class="overall-bar-wrap">
+    <div class="overall-label">Overall</div>
+    <div class="bar-track"><div class="bar-fill" id="overall-bar" style="width:0%"></div></div>
+    <div class="overall-pct" id="overall-pct">0%</div>
+  </div>
+</div>
+
+<div class="who-bar">
+  <div class="who-label">Playing as:</div>
+  <button class="who-btn active" id="btn-A" onclick="setWho('A')">A</button>
+  <button class="who-btn" id="btn-Coach" onclick="setWho('Coach')">Coach</button>
+</div>
+
+<div class="main" id="main-content"></div>
+<div class="status-msg" id="status-msg"></div>
+
+<script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwI89of9BMga0ZSlXJWPFXX53GZhQ9Qr14-J9YC8NXjAIMJsZJfwpGIqO3y611MhUqojw/exec";
+const DEADLINE = new Date("2026-07-31T23:59:59");
+
+const LEVELS = [
+  {
+    id: 1, name: "Shortlist Roles", timeline: "5 days",
+    goal: "Written list of 2–3 target role types with rationale",
+    reward: "Your Player Profile — a positioning statement in your own words",
+    parallel: false,
+    missions: [
+      { id: "1.1", text: "Brain-dump every finance role title you've heard of or considered", xp: 10 },
+      { id: "1.2", text: "Research day-in-the-life for each role (Google, YouTube, LinkedIn)", xp: 20 },
+      { id: "1.3", text: "Have 1 conversation with someone in a target role (reality check)", xp: 40 },
+      { id: "1.4", text: "Map each role to your venture debt experience — fit vs stretch", xp: 20 },
+      { id: "1.5", text: "Write final 2–3 role targets with 1-line rationale each", xp: 10 },
+    ]
+  },
+  {
+    id: 2, name: "Shortlist Companies", timeline: "5 days",
+    goal: "A tiered list of 20–25 target companies",
+    reward: "Your Hit List — tiered, annotated, ready to activate",
+    parallel: false,
+    missions: [
+      { id: "2.1", text: "List every company you already know in your target space", xp: 10 },
+      { id: "2.2", text: "Research and add companies from LinkedIn, Naukri, Google", xp: 20 },
+      { id: "2.3", text: "For each company check size, stage, culture, growth trajectory", xp: 20 },
+      { id: "2.4", text: "Tier the list — A-list (dream), B-list (strong fit), C-list (backup)", xp: 30 },
+      { id: "2.5", text: "Identify 1 insider contact or connection for at least 5 companies", xp: 20 },
+    ]
+  },
+  {
+    id: 3, name: "Hunt Opportunities", timeline: "Ongoing",
+    goal: "Live tracker of open roles mapped to your Hit List",
+    reward: "Your Opportunity Radar — live, organised, never miss a role",
+    parallel: true,
+    missions: [
+      { id: "3.1", text: "Set up job alerts on LinkedIn, Naukri, Indeed for target roles", xp: 10 },
+      { id: "3.2", text: "Check company career pages of all A-list companies directly", xp: 20 },
+      { id: "3.3", text: "Join 2–3 relevant WhatsApp/Telegram finance job groups", xp: 20 },
+      { id: "3.4", text: "Build a simple tracker — company, role, source, date found", xp: 20 },
+      { id: "3.5", text: "Identify and follow 5 finance recruiters/headhunters actively", xp: 30 },
+    ]
+  },
+  {
+    id: 4, name: "Activate Referrals", timeline: "7 days to activate",
+    goal: "At least 5 referral conversations initiated",
+    reward: "Your Warm Network Map — who's activated, who's pending",
+    parallel: true,
+    missions: [
+      { id: "4.1", text: "Map your full network — college, internships, current job, LinkedIn", xp: 10 },
+      { id: "4.2", text: "Identify 10 people who could refer or connect you", xp: 15 },
+      { id: "4.3", text: "Craft your referral ask message (short, specific, easy to act on)", xp: 15 },
+      { id: "4.4", text: "Send first 5 referral messages", xp: 30 },
+      { id: "4.5", text: "Follow up on non-responses after 4 days", xp: 15 },
+      { id: "4.6", text: "Have at least 3 actual referral conversations", xp: 15 },
+    ]
+  },
+  {
+    id: 5, name: "Cold Outreach", timeline: "7 days first wave",
+    goal: "10 cold messages sent, at least 2 responses",
+    reward: "Your Cold Outreach Playbook — template that actually works",
+    parallel: true,
+    missions: [
+      { id: "5.1", text: "Identify 15 target people to cold reach (hiring managers, analysts, VCs)", xp: 15 },
+      { id: "5.2", text: "Research each person before writing — find a genuine hook", xp: 20 },
+      { id: "5.3", text: "Write your cold outreach template (personalised, under 5 lines)", xp: 15 },
+      { id: "5.4", text: "Send first 10 cold messages", xp: 30 },
+      { id: "5.5", text: "Follow up on non-responses after 5 days", xp: 20 },
+    ]
+  },
+  {
+    id: 6, name: "Apply", timeline: "Ongoing",
+    goal: "15 quality applications submitted",
+    reward: "Your Application Engine — resume versions, templates, tracker live",
+    parallel: true,
+    missions: [
+      { id: "6.1", text: "Tailor your resume for each role type (2–3 versions max)", xp: 20 },
+      { id: "6.2", text: "Write a core cover letter template + customisation guide", xp: 15 },
+      { id: "6.3", text: "Submit first 5 applications", xp: 20 },
+      { id: "6.4", text: "Submit next 10 applications", xp: 30 },
+      { id: "6.5", text: "Log every application — company, role, date, status, contact", xp: 15 },
+    ]
+  },
+  {
+    id: 7, name: "Prep", timeline: "7 days core prep",
+    goal: "Ready for any interview in target roles",
+    reward: "Your Interview Arsenal — stories, technicals, questions, all ready",
+    parallel: false,
+    missions: [
+      { id: "7.1", text: "Research top 10 interview questions for each target role", xp: 15 },
+      { id: "7.2", text: "Prepare your story — background, why this role, why this company", xp: 20 },
+      { id: "7.3", text: "Prep for technical questions — credit analysis, financial modelling basics", xp: 25 },
+      { id: "7.4", text: "Do 1 mock interview (with a friend, mentor, or record yourself)", xp: 25 },
+      { id: "7.5", text: "Prepare 5 smart questions to ask interviewers", xp: 15 },
+    ]
+  },
+  {
+    id: 8, name: "Selection Process", timeline: "As long as it takes",
+    goal: "At least one offer received",
+    reward: "🏆 The Trophy — Signed Offer Letter. Game Over. You Won.",
+    parallel: false,
+    missions: [
+      { id: "8.1", text: "Clear first screening call / HR round for any company", xp: 15 },
+      { id: "8.2", text: "Clear first technical or case study round", xp: 25 },
+      { id: "8.3", text: "Clear final interview round for any company", xp: 25 },
+      { id: "8.4", text: "Receive written offer", xp: 25 },
+      { id: "8.5", text: "Negotiate and sign", xp: 10 },
+    ]
+  }
+];
+
+let completed = new Set();
+let openLevels = new Set([1]);
+let expandedLevels = new Set();
+let currentWho = 'A';
+let saving = false;
+
+function setWho(name) {
+  currentWho = name;
+  document.getElementById('btn-A').className = 'who-btn' + (name === 'A' ? ' active' : '');
+  document.getElementById('btn-Coach').className = 'who-btn' + (name === 'Coach' ? ' active' : '');
+}
+
+function getLevelXP(levelId) {
+  return LEVELS.find(l => l.id === levelId).missions.reduce((s, m) => s + (completed.has(m.id) ? m.xp : 0), 0);
+}
+function getLevelTotal(levelId) {
+  return LEVELS.find(l => l.id === levelId).missions.reduce((s, m) => s + m.xp, 0);
+}
+function isLevelComplete(levelId) {
+  const l = LEVELS.find(lv => lv.id === levelId);
+  return l.missions.every(m => completed.has(m.id));
+}
+function isLevelUnlocked(levelId) {
+  return openLevels.has(levelId);
+}
+
+function recomputeUnlocks() {
+  if (isLevelComplete(1) && isLevelComplete(2)) {
+    [3,4,5,6].forEach(id => openLevels.add(id));
+  }
+  if (isLevelComplete(1)) openLevels.add(2);
+  if ([3,4,5,6].every(id => isLevelComplete(id))) openLevels.add(7);
+  if (isLevelComplete(7)) openLevels.add(8);
+}
+
+function updateOverall() {
+  const total = LEVELS.reduce((s, l) => s + getLevelTotal(l.id), 0);
+  const earned = LEVELS.reduce((s, l) => s + getLevelXP(l.id), 0);
+  const pct = Math.round((earned / total) * 100);
+  document.getElementById('overall-bar').style.width = pct + '%';
+  document.getElementById('overall-pct').textContent = pct + '%';
+}
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = DEADLINE - now;
+  if (diff <= 0) { document.getElementById('countdown').textContent = 'Deadline passed'; return; }
+  const days = Math.floor(diff / 86400000);
+  document.getElementById('countdown').textContent = days + ' days left';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = 'status-msg ' + type;
+  if (type === 'saved') setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 2000);
+}
+
+async function toggleMission(missionId, levelId) {
+  if (!isLevelUnlocked(levelId)) return;
+  if (saving) return;
+  saving = true;
+  const wasDone = completed.has(missionId);
+  const mission = LEVELS.find(l => l.id === levelId).missions.find(m => m.id === missionId);
+
+  if (wasDone) completed.delete(missionId);
+  else completed.add(missionId);
+
+  recomputeUnlocks();
+  render();
+  updateOverall();
+
+  showStatus('Saving...', 'saving');
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: wasDone ? 'uncomplete' : 'complete',
+        mission_id: String(missionId),
+        level_no: levelId,
+        mission_name: mission.text,
+        xp_earned: mission.xp,
+        completed_by: currentWho,
+        notes: ''
+      })
+    });
+    const json = await res.json();
+    console.log('Sheet response:', JSON.stringify(json));
+    if (json.action === 'uncomplete' && json.deleted_row === -1) {
+      showStatus('Row not found in sheet', 'error');
+    } else {
+      showStatus('Saved \u2713', 'saved');
+    }
+  } catch(e) {
+    showStatus('Saved locally (offline)', 'saved');
+  }
+  saving = false;
+}
+
+function toggleLevel(levelId) {
+  if (expandedLevels.has(levelId)) {
+    expandedLevels.delete(levelId);
+  } else {
+    expandedLevels.add(levelId);
+  }
+  const body = document.getElementById('body-' + levelId);
+  const chev = document.getElementById('chev-' + levelId);
+  if (!body) return;
+  body.classList.toggle('open', expandedLevels.has(levelId));
+  chev.classList.toggle('open', expandedLevels.has(levelId));
+}
+
+function restoreExpanded() {
+  expandedLevels.forEach(levelId => {
+    const body = document.getElementById('body-' + levelId);
+    const chev = document.getElementById('chev-' + levelId);
+    if (body) body.classList.add('open');
+    if (chev) chev.classList.add('open');
+  });
+}
+
+function render() {
+  const container = document.getElementById('main-content');
+  let html = '';
+
+  const allDone = LEVELS.every(l => isLevelComplete(l.id));
+  if (allDone) {
+    html += `<div class="trophy-card"><div class="trophy-icon">🏆</div><div class="trophy-title">You did it, A!</div><div class="trophy-sub">Signed offer letter in hand. Game Over. You Won.</div></div>`;
+  }
+
+  LEVELS.forEach(level => {
+    const xpEarned = getLevelXP(level.id);
+    const xpTotal = getLevelTotal(level.id);
+    const unlocked = isLevelUnlocked(level.id);
+    const complete = isLevelComplete(level.id);
+    const pct = Math.round((xpEarned / xpTotal) * 100);
+
+    let cardClass = 'level-card';
+    if (!unlocked) cardClass += ' locked';
+    if (complete) cardClass += ' completed';
+
+    let numClass = 'level-num ' + (complete ? 'completed' : unlocked ? 'active' : 'locked');
+    let badgeClass = 'level-xp-badge ' + (complete ? 'completed' : !unlocked ? 'locked' : '');
+    let badgeText = complete ? '✓ Done' : xpEarned + ' / ' + xpTotal + ' XP';
+    let icon = complete ? '✓' : !unlocked ? '🔒' : level.id;
+
+    html += `<div class="${cardClass}" id="level-${level.id}">`;
+    html += `<div class="level-header" onclick="toggleLevel(${level.id})">`;
+    html += `<div class="${numClass}">${icon}</div>`;
+    html += `<div class="level-info">`;
+    html += `<div class="level-name">Level ${level.id} — ${level.name}${level.parallel ? '<span class="parallel-tag">runs in parallel</span>' : ''}</div>`;
+    html += `<div class="level-sub">${level.timeline}</div>`;
+    html += `</div>`;
+    html += `<div class="${badgeClass}">${badgeText}</div>`;
+    html += `<div class="chevron" id="chev-${level.id}">▾</div>`;
+    html += `</div>`;
+
+    html += `<div class="level-body" id="body-${level.id}">`;
+    html += `<div class="level-goal"><strong>Goal:</strong> ${level.goal}</div>`;
+
+    html += `<div class="level-xp-bar">`;
+    html += `<div class="xp-bar-labels"><span>XP Progress</span><span>${xpEarned} / ${xpTotal}</span></div>`;
+    html += `<div class="xp-bar-track"><div class="xp-bar-fill ${complete ? 'complete' : ''}" style="width:${pct}%"></div></div>`;
+    html += `</div>`;
+
+    level.missions.forEach(m => {
+      const done = completed.has(m.id);
+      const clickable = unlocked ? `onclick="toggleMission('${m.id}', ${level.id})"` : '';
+      html += `<div class="mission-row">`;
+      html += `<div class="mission-check ${done ? 'done' : ''}" ${clickable}></div>`;
+      html += `<div class="mission-text ${done ? 'done' : ''}">${m.text}</div>`;
+      html += `<div class="mission-xp ${done ? 'done' : ''}">${done ? '✓' : '+'} ${m.xp} XP</div>`;
+      html += `</div>`;
+    });
+
+    if (complete) {
+      html += `<div class="reward-box"><strong>🎁 Level Reward:</strong> ${level.reward}</div>`;
+      html += `<div class="completed-stamp">Level ${level.id} Complete ✓</div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+  restoreExpanded();
+}
+
+async function loadProgress() {
+  showStatus('Loading progress...', 'saving');
+  try {
+    const res = await fetch(SHEET_URL);
+    const json = await res.json();
+    if (json.data) {
+      json.data.forEach(row => {
+        if (row.mission_id) completed.add(String(row.mission_id));
+      });
+    }
+    showStatus('', '');
+  } catch(e) {
+    showStatus('Could not load — showing fresh start', 'error');
+    setTimeout(() => { document.getElementById('status-msg').textContent = ''; }, 3000);
+  }
+  recomputeUnlocks();
+  render();
+  updateOverall();
+}
+
+updateCountdown();
+setInterval(updateCountdown, 60000);
+loadProgress();
+</script>
+</body>
+</html>
