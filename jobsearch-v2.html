@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Search V2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f0f0f; --surface:#181818; --surface2:#222222;
+    --border:#2a2a2a; --text:#f0ede8; --text-muted:#6b6660; --text-dim:#9e9992;
+    --gold:#c9a84c; --gold-dim:#7a6330; --green:#4caf7d;
+    --amber:#e8a838; --red:#e05c5c; --radius:10px; --gap:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;padding:28px 32px;}
+
+  /* HEADER */
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+  .header h1{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-0.3px;}
+  .header h1 span{color:var(--gold);font-style:italic;}
+  .header p{font-size:12px;color:var(--text-muted);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase;}
+  .deadline-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+  .deadline-badge .days{font-family:'DM Serif Display',serif;font-size:36px;color:var(--gold);line-height:1;}
+  .deadline-badge .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;}
+
+  /* DIAGNOSTIC BLOCK */
+  .diag{margin-bottom:28px;display:flex;flex-direction:column;gap:12px;}
+
+  /* PIPELINE SUMMARY */
+  .pipeline-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap);}
+  .stage-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden;}
+  .stage-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold-dim);}
+  .stage-tile.has-cards::before{background:var(--gold);}
+  .stage-name{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px;}
+  .stage-count{font-family:'DM Serif Display',serif;font-size:32px;line-height:1;color:var(--text);}
+  .stage-count.zero{color:var(--text-muted);}
+  .stage-label{font-size:10px;color:var(--text-muted);margin-top:4px;}
+
+  /* CONVERSION ROW */
+  .conversion-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;display:flex;align-items:center;gap:0;}
+  .conv-item{display:flex;align-items:center;gap:0;flex:1;}
+  .conv-pair{display:flex;flex-direction:column;gap:2px;flex:1;}
+  .conv-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;}
+  .conv-rate{font-family:'DM Serif Display',serif;font-size:22px;line-height:1;}
+  .conv-rate.high{color:var(--green);}
+  .conv-rate.mid{color:var(--amber);}
+  .conv-rate.low{color:var(--red);}
+  .conv-rate.na{color:var(--text-muted);font-size:16px;}
+  .conv-arrow{color:var(--border);font-size:18px;padding:0 12px;flex-shrink:0;}
+
+  /* STALLED */
+  .stalled-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .stalled-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);flex-shrink:0;}
+  .stalled-empty{font-size:12px;color:var(--green);}
+  .stall-tag{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid;white-space:nowrap;}
+  .stall-tag.amber{border-color:var(--amber);color:var(--amber);background:rgba(232,168,56,0.08);}
+  .stall-tag.red{border-color:var(--red);color:var(--red);background:rgba(224,92,92,0.08);}
+
+  /* SECTION LABEL */
+  .section-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:12px;}
+
+  /* KANBAN */
+  .kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:28px;}
+  .column{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .col-header{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .col-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--text-dim);}
+  .col-count{font-size:11px;color:var(--text-muted);background:var(--surface2);padding:1px 7px;border-radius:20px;}
+  .col-body{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:50px;}
+
+  /* CARDS */
+  .card{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 11px;}
+  .card.stale-amber{border-left:3px solid var(--amber);}
+  .card.stale-red{border-left:3px solid var(--red);}
+  .card-company{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-role{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px;}
+  .card-age{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;}
+  .age-green{background:rgba(76,175,125,0.15);color:var(--green);}
+  .age-amber{background:rgba(232,168,56,0.15);color:var(--amber);}
+  .age-red{background:rgba(224,92,92,0.15);color:var(--red);}
+
+  /* SKILL BUILDING */
+  .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap);margin-bottom:28px;}
+  .skill-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+  .skill-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;}
+  .skill-bar-bg{background:var(--surface2);border-radius:4px;height:6px;margin-bottom:10px;overflow:hidden;}
+  .skill-bar-fill{height:100%;border-radius:4px;background:var(--gold);transition:width 0.4s ease;}
+  .skill-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);}
+  .skill-pct{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);margin-bottom:4px;}
+
+  /* RULES */
+  .rules-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;}
+  .rules-panel summary{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:8px;}
+  .rules-panel summary::after{content:'▾';color:var(--gold);font-size:13px;transition:transform 0.2s;}
+  .rules-panel[open] summary::after{transform:rotate(180deg);}
+  .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 24px;margin-top:14px;}
+  .rule-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-dim);}
+  .rule-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+
+  /* LOADING / ERROR */
+  .state-msg{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:13px;}
+  .state-msg .icon{font-size:32px;margin-bottom:12px;}
+  .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* MOBILE */
+  @media(max-width:767px){
+    body{padding:16px;}
+    .header{flex-direction:column;gap:10px;}
+    .deadline-badge{align-items:flex-start;flex-direction:row;align-items:center;gap:10px;}
+    .deadline-badge .days{font-size:26px;}
+    .pipeline-summary{grid-template-columns:repeat(3,1fr);gap:10px;}
+    .pipeline-summary .stage-tile:nth-child(4),.pipeline-summary .stage-tile:nth-child(5){grid-column:span 1;}
+    .conversion-row{flex-wrap:wrap;gap:10px;}
+    .conv-arrow{display:none;}
+    .kanban{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(orientation:landscape)and(max-width:900px){
+    body{padding:14px 20px;}
+    .kanban{grid-template-columns:repeat(3,1fr);}
+    .pipeline-summary{grid-template-columns:repeat(5,1fr);}
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .stage-tile{animation:fadeUp 0.35s ease both;}
+  .stage-tile:nth-child(1){animation-delay:0.05s;}
+  .stage-tile:nth-child(2){animation-delay:0.10s;}
+  .stage-tile:nth-child(3){animation-delay:0.15s;}
+  .stage-tile:nth-child(4){animation-delay:0.20s;}
+  .stage-tile:nth-child(5){animation-delay:0.25s;}
+  .column{animation:fadeUp 0.35s ease both;}
+  .column:nth-child(1){animation-delay:0.10s;}
+  .column:nth-child(2){animation-delay:0.15s;}
+  .column:nth-child(3){animation-delay:0.20s;}
+  .column:nth-child(4){animation-delay:0.25s;}
+  .column:nth-child(5){animation-delay:0.30s;}
+  .column:nth-child(6){animation-delay:0.35s;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>Job Search <span>V2</span></h1>
+    <p>Finance · Large Corporate · International · People-Led</p>
+  </div>
+  <div class="deadline-badge">
+    <div class="days" id="days-left">—</div>
+    <div class="label" id="deadline-label">Days to Goal</div>
+  </div>
+</div>
+
+<!-- DIAGNOSTIC BLOCK -->
+<div class="diag">
+
+  <!-- PIPELINE SUMMARY -->
+  <div class="pipeline-summary" id="pipeline-summary">
+    <div class="state-msg" style="grid-column:1/-1;padding:20px;">
+      <div class="spinner"></div>Loading pipeline…
+    </div>
+  </div>
+
+  <!-- CONVERSION ROW -->
+  <div class="conversion-row" id="conversion-row">
+    <div class="state-msg" style="padding:10px;">—</div>
+  </div>
+
+  <!-- STALLED -->
+  <div class="stalled-bar" id="stalled-bar">
+    <div class="stalled-label">Stalled</div>
+    <div class="stalled-empty">Loading…</div>
+  </div>
+
+</div>
+
+<!-- KANBAN -->
+<div class="section-label">Pipeline</div>
+<div class="kanban" id="kanban">
+  <div class="state-msg" style="grid-column:1/-1;">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- SKILL BUILDING -->
+<div class="section-label">Skill Building</div>
+<div class="skills-grid" id="skills-grid">
+  <div class="state-msg"><div class="spinner"></div></div>
+</div>
+
+<!-- RULES -->
+<details class="rules-panel">
+  <summary>Game Rules</summary>
+  <div class="rules-grid">
+    <div class="rule-item"><div class="rule-dot"></div>Finance field</div>
+    <div class="rule-item"><div class="rule-dot"></div>Large corporate</div>
+    <div class="rule-item"><div class="rule-dot"></div>Fixed timing mostly</div>
+    <div class="rule-item"><div class="rule-dot"></div>Deliver based on structured, medium/complex body of knowledge</div>
+    <div class="rule-item"><div class="rule-dot"></div>Leveraging people skills critical for success</div>
+    <div class="rule-item"><div class="rule-dot"></div>Salary ?</div>
+    <div class="rule-item"><div class="rule-dot"></div>Role has opportunities internationally</div>
+    <div class="rule-item"><div class="rule-dot"></div>Role has clear, measurable goals and rules</div>
+    <div class="rule-item"><div class="rule-dot"></div>Min 3 applications / week</div>
+  </div>
+</details>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI89of9BMga0ZSlXJWPFXX53GZhQ9Qr14-J9YC8NXjAIMJsZJfwpGIqO3y611MhUqojw/exec';
+const STAGES     = ['Research','Referral','Applied','Interview 1','Interview 2'];
+const ALL_STAGES = [...STAGES,'Closed'];
+const WEIGHTS    = {Research:1,Referral:2,Applied:3,'Interview 1':5,'Interview 2':8};
+
+// ── FETCH ──
+async function fetchTab(tab) {
+  const res = await fetch(SCRIPT_URL + '?tab=' + tab);
+  const json = await res.json();
+  if (json.status !== 'ok') throw new Error('Sheet error: ' + tab);
+  return json.data;
+}
+
+async function loadAll() {
+  try {
+    const [companies, skills, config] = await Promise.all([
+      fetchTab('Companies'),
+      fetchTab('SkillBuilding'),
+      fetchTab('Config')
+    ]);
+    render(companies, skills, config);
+  } catch(err) {
+    showError(err.message);
+  }
+}
+
+// ── HELPERS ──
+function daysSince(dateVal) {
+  if (!dateVal) return 0;
+  const d = new Date(dateVal);
+  if (isNaN(d)) return 0;
+  return Math.floor((Date.now() - d) / 86400000);
+}
+
+function ageClass(days, threshold) {
+  if (days >= threshold * 2) return 'age-red';
+  if (days >= threshold)     return 'age-amber';
+  return 'age-green';
+}
+
+function cardStaleClass(days, threshold) {
+  if (days >= threshold * 2) return 'stale-red';
+  if (days >= threshold)     return 'stale-amber';
+  return '';
+}
+
+function convClass(rate) {
+  if (rate === null) return 'na';
+  if (rate >= 70) return 'high';
+  if (rate >= 40) return 'mid';
+  return 'low';
+}
+
+// ── RENDER ──
+function render(companies, skills, config) {
+  const threshold = Number(config.stall_threshold_days) || 7;
+  const deadline  = config.goal_deadline_date ? new Date(config.goal_deadline_date) : null;
+  const active    = companies.filter(c => String(c.active).toLowerCase() === 'yes');
+
+  renderHeader(deadline);
+  renderPipeline(active);
+  renderConversion(companies); // uses all including closed for correct denominators
+  renderStalled(active, threshold);
+  renderKanban(active, threshold);
+  renderSkills(skills);
+}
+
+function renderHeader(deadline) {
+  if (!deadline || isNaN(deadline)) return;
+  const days = Math.ceil((deadline - Date.now()) / 86400000);
+  document.getElementById('days-left').textContent = days > 0 ? days : 0;
+  const label = deadline.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  document.getElementById('deadline-label').textContent = 'Days to Goal · ' + label;
+}
+
+function renderPipeline(active) {
+  const el = document.getElementById('pipeline-summary');
+  el.innerHTML = '';
+  STAGES.forEach(stage => {
+    const count = active.filter(c => c.stage === stage).length;
+    const tile = document.createElement('div');
+    tile.className = 'stage-tile' + (count > 0 ? ' has-cards' : '');
+    tile.innerHTML = `
+      <div class="stage-name">${stage}</div>
+      <div class="stage-count ${count === 0 ? 'zero' : ''}">${count}</div>
+      <div class="stage-label">${count === 1 ? 'company' : 'companies'}</div>`;
+    el.appendChild(tile);
+  });
+}
+
+function renderConversion(companies) {
+  // Include all companies (active + closed) for accurate denominators
+  const el = document.getElementById('conversion-row');
+  el.innerHTML = '';
+
+  const stageIndex = s => ALL_STAGES.indexOf(s);
+
+  function convRate(fromStage, toStage) {
+    const fromIdx = stageIndex(fromStage);
+    const toIdx   = stageIndex(toStage);
+    // Entered fromStage = anyone currently at fromStage or any later stage
+    const entered  = companies.filter(c => stageIndex(c.stage) >= fromIdx).length;
+    const advanced = companies.filter(c => stageIndex(c.stage) >= toIdx).length;
+    if (entered === 0) return null;
+    return Math.round(advanced / entered * 100);
+  }
+
+  const transitions = [
+    {from:'Research',    to:'Referral',    label:'Research → Referral'},
+    {from:'Referral',    to:'Applied',     label:'Referral → Applied'},
+    {from:'Applied',     to:'Interview 1', label:'Applied → Int 1'},
+    {from:'Interview 1', to:'Interview 2', label:'Int 1 → Int 2'},
+  ];
+
+  transitions.forEach((t, i) => {
+    const rate = convRate(t.from, t.to);
+    const cls  = convClass(rate);
+    const display = rate === null ? 'n/a' : rate + '%';
+
+    const item = document.createElement('div');
+    item.className = 'conv-item';
+    item.innerHTML = `
+      <div class="conv-pair">
+        <div class="conv-label">${t.label}</div>
+        <div class="conv-rate ${cls}">${display}</div>
+      </div>`;
+    el.appendChild(item);
+
+    if (i < transitions.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'conv-arrow';
+      arrow.textContent = '·';
+      el.appendChild(arrow);
+    }
+  });
+}
+
+function renderStalled(active, threshold) {
+  const el = document.getElementById('stalled-bar');
+  const stalled = active.filter(c => {
+    if (c.stage === 'Closed') return false;
+    return daysSince(c.stage_changed_date) >= threshold;
+  });
+
+  el.innerHTML = '<div class="stalled-label">Stalled</div>';
+
+  if (stalled.length === 0) {
+    el.innerHTML += '<div class="stalled-empty">✓ All cards moving</div>';
+    return;
+  }
+
+  stalled.forEach(c => {
+    const days = daysSince(c.stage_changed_date);
+    const cls  = days >= threshold * 2 ? 'red' : 'amber';
+    const tag  = document.createElement('span');
+    tag.className = `stall-tag ${cls}`;
+    tag.textContent = `${c.company_name} · ${days}d in ${c.stage}`;
+    el.appendChild(tag);
+  });
+}
+
+function renderKanban(active, threshold) {
+  const el = document.getElementById('kanban');
+  el.innerHTML = '';
+
+  ALL_STAGES.forEach(stage => {
+    const cards = active.filter(c => c.stage === stage);
+    const col   = document.createElement('div');
+    col.className = 'column';
+    col.innerHTML = `
+      <div class="col-header">
+        <div class="col-name">${stage}</div>
+        <div class="col-count">${cards.length}</div>
+      </div>
+      <div class="col-body"></div>`;
+    const body = col.querySelector('.col-body');
+
+    cards.forEach(c => {
+      const days  = daysSince(c.stage_changed_date);
+      const aClass = ageClass(days, threshold);
+      const sClass = cardStaleClass(days, threshold);
+      const card  = document.createElement('div');
+      card.className = `card ${sClass}`;
+      card.innerHTML = `
+        <div class="card-company">${c.company_name || '—'}</div>
+        <div class="card-role">${c.role || '—'}</div>
+        <span class="card-age ${aClass}">${days}d</span>`;
+      body.appendChild(card);
+    });
+
+    el.appendChild(col);
+  });
+}
+
+function renderSkills(skills) {
+  const el = document.getElementById('skills-grid');
+  el.innerHTML = '';
+
+  if (!skills || skills.length === 0) {
+    el.innerHTML = '<div class="state-msg"><div class="icon">📋</div>No skill items yet — add rows to the SkillBuilding tab.</div>';
+    return;
+  }
+
+  skills.forEach(s => {
+    const total     = Number(s.total_count)     || 0;
+    const completed = Number(s.completed_count) || 0;
+    const pending   = Math.max(0, total - completed);
+    const pct       = total > 0 ? Math.round(completed / total * 100) : 0;
+    const fillW     = Math.min(100, pct);
+
+    const card = document.createElement('div');
+    card.className = 'skill-card';
+    card.innerHTML = `
+      <div class="skill-name">${s.skill_item || 'Unnamed'}</div>
+      <div class="skill-pct">${pct}%</div>
+      <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${fillW}%"></div></div>
+      <div class="skill-stats">
+        <span style="color:var(--green)">✓ ${completed} done</span>
+        <span>${pending} pending</span>
+        <span style="color:var(--text-muted)">${total} total</span>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+
+function showError(msg) {
+  const errHtml = `<div class="state-msg"><div class="icon">⚠</div>${msg}<br><span style="font-size:11px;margin-top:6px;display:block;color:var(--text-muted)">Check that the Sheet is shared and App Script is deployed.</span></div>`;
+  document.getElementById('pipeline-summary').innerHTML = `<div style="grid-column:1/-1">${errHtml}</div>`;
+  document.getElementById('kanban').innerHTML = errHtml;
+  document.getElementById('skills-grid').innerHTML = errHtml;
+}
+
+loadAll();
+</script>
+</body>
+</html>
