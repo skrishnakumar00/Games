@@ -16,11 +16,21 @@
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;padding:28px 32px;}
 
   /* HEADER */
-  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border);gap:16px;}
   .header h1{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-0.3px;}
   .header h1 span{color:var(--gold);font-style:italic;}
   .header p{font-size:12px;color:var(--text-muted);margin-top:4px;letter-spacing:0.5px;text-transform:uppercase;}
-  .deadline-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex-shrink:0;}
+  .header-actions{display:flex;gap:8px;}
+  .btn-action{
+    background:var(--surface);border:1px solid var(--border);color:var(--text-dim);
+    border-radius:6px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:11px;
+    cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s,color 0.15s;
+    text-decoration:none;white-space:nowrap;
+  }
+  .btn-action:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-action.spinning .icon{animation:spin 0.6s linear infinite;}
+  .deadline-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
   .deadline-badge .days{font-family:'DM Serif Display',serif;font-size:36px;color:var(--gold);line-height:1;}
   .deadline-badge .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;}
 
@@ -80,13 +90,35 @@
   .age-red{background:rgba(224,92,92,0.15);color:var(--red);}
 
   /* SKILL BUILDING */
-  .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap);margin-bottom:28px;}
+  .skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--gap);margin-bottom:28px;}
   .skill-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
-  .skill-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;}
+  .skill-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .skill-type-tag{font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);background:var(--surface2);padding:2px 6px;border-radius:4px;flex-shrink:0;}
+
+  /* count-type bar */
   .skill-bar-bg{background:var(--surface2);border-radius:4px;height:6px;margin-bottom:10px;overflow:hidden;}
   .skill-bar-fill{height:100%;border-radius:4px;background:var(--gold);transition:width 0.4s ease;}
   .skill-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);}
   .skill-pct{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);margin-bottom:4px;}
+
+  /* time-type pace bar */
+  .pace-bar-bg{background:var(--surface2);border-radius:4px;height:10px;margin-bottom:6px;overflow:hidden;position:relative;}
+  .pace-bar-fill{height:100%;border-radius:4px;background:var(--gold);transition:width 0.4s ease;}
+  .pace-marker{position:absolute;top:-3px;width:2px;height:16px;background:var(--text);opacity:0.6;}
+  .pace-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:12px;}
+  .pace-stats .actual{color:var(--gold);font-weight:600;}
+  .pace-status{font-size:11px;margin-bottom:10px;display:inline-block;padding:2px 8px;border-radius:4px;}
+  .pace-status.ahead{background:rgba(76,175,125,0.15);color:var(--green);}
+  .pace-status.ontrack{background:rgba(232,168,56,0.15);color:var(--amber);}
+  .pace-status.behind{background:rgba(224,92,92,0.15);color:var(--red);}
+
+  /* daily strip */
+  .daily-strip{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:10px;}
+  .day-box{aspect-ratio:1;border-radius:3px;background:var(--surface2);border:1px solid var(--border);}
+  .day-box.lvl1{background:rgba(201,168,76,0.25);border-color:rgba(201,168,76,0.3);}
+  .day-box.lvl2{background:rgba(201,168,76,0.5);border-color:rgba(201,168,76,0.5);}
+  .day-box.lvl3{background:rgba(201,168,76,0.8);border-color:var(--gold);}
+  .day-box.future{background:transparent;border-style:dashed;border-color:var(--border);}
 
   /* RULES */
   .rules-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;}
@@ -102,18 +134,20 @@
   .state-msg .icon{font-size:32px;margin-bottom:12px;}
   .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px;}
   @keyframes spin{to{transform:rotate(360deg);}}
+  .last-updated{font-size:10px;color:var(--text-muted);margin-top:2px;}
 
   /* MOBILE */
   @media(max-width:767px){
     body{padding:16px;}
-    .header{flex-direction:column;gap:10px;}
+    .header{flex-direction:column;gap:14px;}
+    .header-right{align-items:flex-start;width:100%;}
     .deadline-badge{align-items:flex-start;flex-direction:row;align-items:center;gap:10px;}
     .deadline-badge .days{font-size:26px;}
     .pipeline-summary{grid-template-columns:repeat(3,1fr);gap:10px;}
-    .pipeline-summary .stage-tile:nth-child(4),.pipeline-summary .stage-tile:nth-child(5){grid-column:span 1;}
     .conversion-row{flex-wrap:wrap;gap:10px;}
     .conv-arrow{display:none;}
     .kanban{grid-template-columns:repeat(2,1fr);}
+    .daily-strip{grid-template-columns:repeat(8,1fr);}
   }
   @media(orientation:landscape)and(max-width:900px){
     body{padding:14px 20px;}
@@ -146,41 +180,41 @@
     <h1>Job Search <span>V2</span></h1>
     <p>Finance · Large Corporate · International · People-Led</p>
   </div>
-  <div class="deadline-badge">
-    <div class="days" id="days-left">—</div>
-    <div class="label" id="deadline-label">Days to Goal</div>
+  <div class="header-right">
+    <div class="header-actions">
+      <a class="btn-action" id="edit-link" href="#" target="_blank" rel="noopener">
+        <span class="icon">✎</span> Edit in Sheet
+      </a>
+      <button class="btn-action" id="refresh-btn" onclick="manualRefresh()">
+        <span class="icon">⟳</span> Refresh
+      </button>
+    </div>
+    <div class="deadline-badge">
+      <div class="days" id="days-left">—</div>
+      <div class="label" id="deadline-label">Days to Goal</div>
+    </div>
+    <div class="last-updated" id="last-updated"></div>
   </div>
 </div>
 
 <!-- DIAGNOSTIC BLOCK -->
 <div class="diag">
-
-  <!-- PIPELINE SUMMARY -->
   <div class="pipeline-summary" id="pipeline-summary">
-    <div class="state-msg" style="grid-column:1/-1;padding:20px;">
-      <div class="spinner"></div>Loading pipeline…
-    </div>
+    <div class="state-msg" style="grid-column:1/-1;padding:20px;"><div class="spinner"></div>Loading pipeline…</div>
   </div>
-
-  <!-- CONVERSION ROW -->
   <div class="conversion-row" id="conversion-row">
     <div class="state-msg" style="padding:10px;">—</div>
   </div>
-
-  <!-- STALLED -->
   <div class="stalled-bar" id="stalled-bar">
     <div class="stalled-label">Stalled</div>
     <div class="stalled-empty">Loading…</div>
   </div>
-
 </div>
 
 <!-- KANBAN -->
 <div class="section-label">Pipeline</div>
 <div class="kanban" id="kanban">
-  <div class="state-msg" style="grid-column:1/-1;">
-    <div class="spinner"></div>
-  </div>
+  <div class="state-msg" style="grid-column:1/-1;"><div class="spinner"></div></div>
 </div>
 
 <!-- SKILL BUILDING -->
@@ -207,13 +241,15 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwI89of9BMga0ZSlXJWPFXX53GZhQ9Qr14-J9YC8NXjAIMJsZJfwpGIqO3y611MhUqojw/exec';
+const SHEET_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1vfN5hp_98zWPqtBWjmhlzfFmKOpcm4KKgatMqwI9tL0/edit';
 const STAGES     = ['Research','Referral','Applied','Interview 1','Interview 2'];
 const ALL_STAGES = [...STAGES,'Closed'];
-const WEIGHTS    = {Research:1,Referral:2,Applied:3,'Interview 1':5,'Interview 2':8};
+
+document.getElementById('edit-link').href = SHEET_EDIT_URL;
 
 // ── FETCH ──
 async function fetchTab(tab) {
-  const res = await fetch(SCRIPT_URL + '?tab=' + tab);
+  const res = await fetch(SCRIPT_URL + '?tab=' + tab + '&_=' + Date.now());
   const json = await res.json();
   if (json.status !== 'ok') throw new Error('Sheet error: ' + tab);
   return json.data;
@@ -221,15 +257,32 @@ async function fetchTab(tab) {
 
 async function loadAll() {
   try {
-    const [companies, skills, config] = await Promise.all([
+    const [companies, skillItems, skillLog, config] = await Promise.all([
       fetchTab('Companies'),
-      fetchTab('SkillBuilding'),
+      fetchTab('SkillItems'),
+      fetchTab('SkillLog'),
       fetchTab('Config')
     ]);
-    render(companies, skills, config);
+    render(companies, skillItems, skillLog, config);
+    stampUpdated();
   } catch(err) {
     showError(err.message);
   }
+}
+
+function stampUpdated() {
+  const now = new Date();
+  document.getElementById('last-updated').textContent =
+    'Updated ' + now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  await loadAll();
+  btn.classList.remove('spinning');
+  btn.disabled = false;
 }
 
 // ── HELPERS ──
@@ -239,19 +292,16 @@ function daysSince(dateVal) {
   if (isNaN(d)) return 0;
   return Math.floor((Date.now() - d) / 86400000);
 }
-
 function ageClass(days, threshold) {
   if (days >= threshold * 2) return 'age-red';
   if (days >= threshold)     return 'age-amber';
   return 'age-green';
 }
-
 function cardStaleClass(days, threshold) {
   if (days >= threshold * 2) return 'stale-red';
   if (days >= threshold)     return 'stale-amber';
   return '';
 }
-
 function convClass(rate) {
   if (rate === null) return 'na';
   if (rate >= 70) return 'high';
@@ -260,17 +310,17 @@ function convClass(rate) {
 }
 
 // ── RENDER ──
-function render(companies, skills, config) {
+function render(companies, skillItems, skillLog, config) {
   const threshold = Number(config.stall_threshold_days) || 7;
   const deadline  = config.goal_deadline_date ? new Date(config.goal_deadline_date) : null;
   const active    = companies.filter(c => String(c.active).toLowerCase() === 'yes');
 
   renderHeader(deadline);
   renderPipeline(active);
-  renderConversion(companies); // uses all including closed for correct denominators
+  renderConversion(companies);
   renderStalled(active, threshold);
   renderKanban(active, threshold);
-  renderSkills(skills);
+  renderSkills(skillItems, skillLog);
 }
 
 function renderHeader(deadline) {
@@ -288,56 +338,39 @@ function renderPipeline(active) {
     const count = active.filter(c => c.stage === stage).length;
     const tile = document.createElement('div');
     tile.className = 'stage-tile' + (count > 0 ? ' has-cards' : '');
-    tile.innerHTML = `
-      <div class="stage-name">${stage}</div>
-      <div class="stage-count ${count === 0 ? 'zero' : ''}">${count}</div>
-      <div class="stage-label">${count === 1 ? 'company' : 'companies'}</div>`;
+    tile.innerHTML = `<div class="stage-name">${stage}</div><div class="stage-count ${count===0?'zero':''}">${count}</div><div class="stage-label">${count===1?'company':'companies'}</div>`;
     el.appendChild(tile);
   });
 }
 
 function renderConversion(companies) {
-  // Include all companies (active + closed) for accurate denominators
   const el = document.getElementById('conversion-row');
   el.innerHTML = '';
-
   const stageIndex = s => ALL_STAGES.indexOf(s);
-
   function convRate(fromStage, toStage) {
-    const fromIdx = stageIndex(fromStage);
-    const toIdx   = stageIndex(toStage);
-    // Entered fromStage = anyone currently at fromStage or any later stage
+    const fromIdx = stageIndex(fromStage), toIdx = stageIndex(toStage);
     const entered  = companies.filter(c => stageIndex(c.stage) >= fromIdx).length;
     const advanced = companies.filter(c => stageIndex(c.stage) >= toIdx).length;
     if (entered === 0) return null;
     return Math.round(advanced / entered * 100);
   }
-
   const transitions = [
-    {from:'Research',    to:'Referral',    label:'Research → Referral'},
-    {from:'Referral',    to:'Applied',     label:'Referral → Applied'},
-    {from:'Applied',     to:'Interview 1', label:'Applied → Int 1'},
-    {from:'Interview 1', to:'Interview 2', label:'Int 1 → Int 2'},
+    {from:'Research',to:'Referral',label:'Research → Referral'},
+    {from:'Referral',to:'Applied',label:'Referral → Applied'},
+    {from:'Applied',to:'Interview 1',label:'Applied → Int 1'},
+    {from:'Interview 1',to:'Interview 2',label:'Int 1 → Int 2'},
   ];
-
-  transitions.forEach((t, i) => {
+  transitions.forEach((t,i) => {
     const rate = convRate(t.from, t.to);
-    const cls  = convClass(rate);
+    const cls = convClass(rate);
     const display = rate === null ? 'n/a' : rate + '%';
-
     const item = document.createElement('div');
     item.className = 'conv-item';
-    item.innerHTML = `
-      <div class="conv-pair">
-        <div class="conv-label">${t.label}</div>
-        <div class="conv-rate ${cls}">${display}</div>
-      </div>`;
+    item.innerHTML = `<div class="conv-pair"><div class="conv-label">${t.label}</div><div class="conv-rate ${cls}">${display}</div></div>`;
     el.appendChild(item);
-
     if (i < transitions.length - 1) {
       const arrow = document.createElement('div');
-      arrow.className = 'conv-arrow';
-      arrow.textContent = '·';
+      arrow.className = 'conv-arrow'; arrow.textContent = '·';
       el.appendChild(arrow);
     }
   });
@@ -345,22 +378,13 @@ function renderConversion(companies) {
 
 function renderStalled(active, threshold) {
   const el = document.getElementById('stalled-bar');
-  const stalled = active.filter(c => {
-    if (c.stage === 'Closed') return false;
-    return daysSince(c.stage_changed_date) >= threshold;
-  });
-
+  const stalled = active.filter(c => c.stage !== 'Closed' && daysSince(c.stage_changed_date) >= threshold);
   el.innerHTML = '<div class="stalled-label">Stalled</div>';
-
-  if (stalled.length === 0) {
-    el.innerHTML += '<div class="stalled-empty">✓ All cards moving</div>';
-    return;
-  }
-
+  if (stalled.length === 0) { el.innerHTML += '<div class="stalled-empty">✓ All cards moving</div>'; return; }
   stalled.forEach(c => {
     const days = daysSince(c.stage_changed_date);
-    const cls  = days >= threshold * 2 ? 'red' : 'amber';
-    const tag  = document.createElement('span');
+    const cls = days >= threshold * 2 ? 'red' : 'amber';
+    const tag = document.createElement('span');
     tag.className = `stall-tag ${cls}`;
     tag.textContent = `${c.company_name} · ${days}d in ${c.stage}`;
     el.appendChild(tag);
@@ -370,65 +394,119 @@ function renderStalled(active, threshold) {
 function renderKanban(active, threshold) {
   const el = document.getElementById('kanban');
   el.innerHTML = '';
-
   ALL_STAGES.forEach(stage => {
     const cards = active.filter(c => c.stage === stage);
-    const col   = document.createElement('div');
+    const col = document.createElement('div');
     col.className = 'column';
-    col.innerHTML = `
-      <div class="col-header">
-        <div class="col-name">${stage}</div>
-        <div class="col-count">${cards.length}</div>
-      </div>
-      <div class="col-body"></div>`;
+    col.innerHTML = `<div class="col-header"><div class="col-name">${stage}</div><div class="col-count">${cards.length}</div></div><div class="col-body"></div>`;
     const body = col.querySelector('.col-body');
-
     cards.forEach(c => {
-      const days  = daysSince(c.stage_changed_date);
-      const aClass = ageClass(days, threshold);
-      const sClass = cardStaleClass(days, threshold);
-      const card  = document.createElement('div');
-      card.className = `card ${sClass}`;
-      card.innerHTML = `
-        <div class="card-company">${c.company_name || '—'}</div>
-        <div class="card-role">${c.role || '—'}</div>
-        <span class="card-age ${aClass}">${days}d</span>`;
+      const days = daysSince(c.stage_changed_date);
+      const card = document.createElement('div');
+      card.className = `card ${cardStaleClass(days, threshold)}`;
+      card.innerHTML = `<div class="card-company">${c.company_name||'—'}</div><div class="card-role">${c.role||'—'}</div><span class="card-age ${ageClass(days,threshold)}">${days}d</span>`;
       body.appendChild(card);
     });
-
     el.appendChild(col);
   });
 }
 
-function renderSkills(skills) {
+// ── SKILL BUILDING (count + time types) ──
+function renderSkills(skillItems, skillLog) {
   const el = document.getElementById('skills-grid');
   el.innerHTML = '';
 
-  if (!skills || skills.length === 0) {
-    el.innerHTML = '<div class="state-msg"><div class="icon">📋</div>No skill items yet — add rows to the SkillBuilding tab.</div>';
+  if (!skillItems || skillItems.length === 0) {
+    el.innerHTML = '<div class="state-msg"><div class="icon">📋</div>No skill items yet — add rows to the SkillItems tab.</div>';
     return;
   }
 
-  skills.forEach(s => {
-    const total     = Number(s.total_count)     || 0;
-    const completed = Number(s.completed_count) || 0;
-    const pending   = Math.max(0, total - completed);
-    const pct       = total > 0 ? Math.round(completed / total * 100) : 0;
-    const fillW     = Math.min(100, pct);
-
+  skillItems.forEach(item => {
+    const type = String(item.tracking_type || '').toLowerCase().trim();
     const card = document.createElement('div');
     card.className = 'skill-card';
-    card.innerHTML = `
-      <div class="skill-name">${s.skill_item || 'Unnamed'}</div>
-      <div class="skill-pct">${pct}%</div>
-      <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${fillW}%"></div></div>
-      <div class="skill-stats">
-        <span style="color:var(--green)">✓ ${completed} done</span>
-        <span>${pending} pending</span>
-        <span style="color:var(--text-muted)">${total} total</span>
-      </div>`;
+
+    if (type === 'time') {
+      card.innerHTML = renderTimeCard(item, skillLog);
+    } else {
+      card.innerHTML = renderCountCard(item);
+    }
     el.appendChild(card);
   });
+}
+
+function renderCountCard(item) {
+  const total = Number(item.total_count) || 0;
+  const completed = Number(item.completed_count) || 0;
+  const pending = Math.max(0, total - completed);
+  const pct = total > 0 ? Math.round(completed/total*100) : 0;
+  return `
+    <div class="skill-name">${item.skill_item||'Unnamed'} <span class="skill-type-tag">Count</span></div>
+    <div class="skill-pct">${pct}%</div>
+    <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${Math.min(100,pct)}%"></div></div>
+    <div class="skill-stats">
+      <span style="color:var(--green)">✓ ${completed} done</span>
+      <span>${pending} pending</span>
+      <span style="color:var(--text-muted)">${total} total</span>
+    </div>`;
+}
+
+function renderTimeCard(item, skillLog) {
+  const name = item.skill_item;
+  const dailyTarget = Number(item.daily_target_min) || 0;
+  const totalDays = Number(item.total_days) || 0;
+
+  const logs = (skillLog || [])
+    .filter(r => r.skill_item === name)
+    .map(r => ({ date: new Date(r.date), minutes: Number(r.minutes_spent) || 0 }))
+    .filter(r => !isNaN(r.date))
+    .sort((a,b) => a.date - b.date);
+
+  const startDate = logs.length ? logs[0].date : new Date();
+  const today = new Date();
+  const daysElapsed = Math.min(totalDays, Math.max(1, Math.floor((today - startDate)/86400000) + 1));
+
+  const actualTotal = logs.reduce((s,l) => s + l.minutes, 0);
+  const idealSoFar  = dailyTarget * daysElapsed;
+  const fullTarget  = dailyTarget * totalDays;
+
+  const fillPct = fullTarget > 0 ? Math.min(100, Math.round(actualTotal/fullTarget*100)) : 0;
+  const markerPct = fullTarget > 0 ? Math.min(100, Math.round(idealSoFar/fullTarget*100)) : 0;
+
+  let statusCls = 'ontrack', statusTxt = 'On pace';
+  if (actualTotal >= idealSoFar + dailyTarget) { statusCls = 'ahead'; statusTxt = 'Ahead of pace'; }
+  else if (actualTotal < idealSoFar - dailyTarget) { statusCls = 'behind'; statusTxt = 'Behind pace'; }
+
+  // Daily strip — build map by day offset from start
+  const dayMap = {};
+  logs.forEach(l => {
+    const offset = Math.floor((l.date - startDate)/86400000);
+    dayMap[offset] = (dayMap[offset]||0) + l.minutes;
+  });
+
+  let stripHtml = '';
+  for (let i = 0; i < totalDays; i++) {
+    const mins = dayMap[i] || 0;
+    let cls = 'day-box';
+    if (i > daysElapsed - 1) cls += ' future';
+    else if (mins >= dailyTarget) cls += ' lvl3';
+    else if (mins >= dailyTarget * 0.5) cls += ' lvl2';
+    else if (mins > 0) cls += ' lvl1';
+    stripHtml += `<div class="${cls}" title="Day ${i+1}: ${mins}m"></div>`;
+  }
+
+  return `
+    <div class="skill-name">${name||'Unnamed'} <span class="skill-type-tag">Time</span></div>
+    <span class="pace-status ${statusCls}">${statusTxt}</span>
+    <div class="pace-bar-bg">
+      <div class="pace-bar-fill" style="width:${fillPct}%"></div>
+      <div class="pace-marker" style="left:${markerPct}%"></div>
+    </div>
+    <div class="pace-stats">
+      <span class="actual">${actualTotal} min logged</span>
+      <span>of ${fullTarget} min target</span>
+    </div>
+    <div class="daily-strip">${stripHtml}</div>`;
 }
 
 function showError(msg) {
