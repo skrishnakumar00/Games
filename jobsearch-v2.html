@@ -121,6 +121,7 @@
   .day-box.met{background:rgba(76,175,125,0.7);border-color:var(--green);}
   .day-box.partial{background:rgba(232,168,56,0.6);border-color:var(--amber);}
   .day-box.zero{background:rgba(224,92,92,0.3);border-color:rgba(224,92,92,0.4);}
+  .day-box.today{background:var(--surface2);border-color:var(--gold);border-width:2px;}
   .day-box.future{background:transparent;border-style:dashed;border-color:var(--border);}
 
   /* RULES */
@@ -513,13 +514,23 @@ function renderTimeCard(item, skillLog) {
   });
 
   let stripHtml = '';
+  const todayOffset = Math.floor((today - startDate) / 86400000);
   for (let i = 0; i < totalDays; i++) {
     const mins = dayMap[i] || 0;
     let cls = 'day-box';
-    if (i > daysElapsed - 1) cls += ' future';
-    else if (mins >= dailyTarget) cls += ' met';
-    else if (mins > 0) cls += ' partial';
-    else cls += ' zero';
+    if (i > todayOffset) {
+      cls += ' future';
+    } else if (i === todayOffset) {
+      // Today is in progress — only colour if something already logged
+      if (mins >= dailyTarget) cls += ' met';
+      else if (mins > 0) cls += ' partial';
+      else cls += ' today';
+    } else {
+      // Past day — fully resolved
+      if (mins >= dailyTarget) cls += ' met';
+      else if (mins > 0) cls += ' partial';
+      else cls += ' zero';
+    }
     stripHtml += `<div class="${cls}" title="Day ${i+1}: ${mins}m"></div>`;
   }
 
