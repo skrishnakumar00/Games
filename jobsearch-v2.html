@@ -103,7 +103,10 @@
 
   /* time-type pace bar */
   .pace-bar-bg{background:var(--surface2);border-radius:4px;height:10px;margin-bottom:6px;overflow:hidden;position:relative;}
-  .pace-bar-fill{height:100%;border-radius:4px;background:var(--gold);transition:width 0.4s ease;}
+  .pace-bar-fill{height:100%;border-radius:4px;transition:width 0.4s ease,background 0.3s ease;}
+  .pace-bar-fill.ahead{background:var(--green);}
+  .pace-bar-fill.ontrack{background:var(--gold);}
+  .pace-bar-fill.behind{background:var(--red);}
   .pace-marker{position:absolute;top:-3px;width:2px;height:16px;background:var(--text);opacity:0.6;}
   .pace-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:12px;}
   .pace-stats .actual{color:var(--gold);font-weight:600;}
@@ -309,6 +312,31 @@ function convClass(rate) {
   return 'low';
 }
 
+// Handles ISO dates, "30 Jun 26", "30 Jun 2026", "6/30/2026", and native Date objects
+function parseFlexibleDate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return val;
+
+  // Try native parsing first (handles ISO, "Jun 30 2026", "6/30/2026")
+  let d = new Date(val);
+  if (!isNaN(d)) return d;
+
+  // Try "DD Mon YY" or "DD Mon YYYY" e.g. "30 Jun 26"
+  const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  const match = String(val).trim().match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{2,4})$/);
+  if (match) {
+    const day = parseInt(match[1]);
+    const mon = months[match[2].toLowerCase().slice(0,3)];
+    let year = parseInt(match[3]);
+    if (year < 100) year += 2000;
+    if (mon !== undefined) {
+      d = new Date(year, mon, day);
+      if (!isNaN(d)) return d;
+    }
+  }
+  return null;
+}
+
 // ── RENDER ──
 function render(companies, skillItems, skillLog, config) {
   const threshold = Number(config.stall_threshold_days) || 7;
@@ -458,8 +486,8 @@ function renderTimeCard(item, skillLog) {
 
   const logs = (skillLog || [])
     .filter(r => r.skill_item === name)
-    .map(r => ({ date: new Date(r.date), minutes: Number(r.minutes_spent) || 0 }))
-    .filter(r => !isNaN(r.date))
+    .map(r => ({ date: parseFlexibleDate(r.date), minutes: Number(r.minutes_spent) || 0 }))
+    .filter(r => r.date && !isNaN(r.date))
     .sort((a,b) => a.date - b.date);
 
   const startDate = logs.length ? logs[0].date : new Date();
@@ -474,8 +502,8 @@ function renderTimeCard(item, skillLog) {
   const markerPct = fullTarget > 0 ? Math.min(100, Math.round(idealSoFar/fullTarget*100)) : 0;
 
   let statusCls = 'ontrack', statusTxt = 'On pace';
-  if (actualTotal >= idealSoFar + dailyTarget) { statusCls = 'ahead'; statusTxt = 'Ahead of pace'; }
-  else if (actualTotal < idealSoFar - dailyTarget) { statusCls = 'behind'; statusTxt = 'Behind pace'; }
+  if (actualTotal > idealSoFar) { statusCls = 'ahead'; statusTxt = 'Ahead of pace'; }
+  else if (actualTotal < idealSoFar) { statusCls = 'behind'; statusTxt = 'Behind pace'; }
 
   // Daily strip — build map by day offset from start
   const dayMap = {};
@@ -499,7 +527,7 @@ function renderTimeCard(item, skillLog) {
     <div class="skill-name">${name||'Unnamed'} <span class="skill-type-tag">Time</span></div>
     <span class="pace-status ${statusCls}">${statusTxt}</span>
     <div class="pace-bar-bg">
-      <div class="pace-bar-fill" style="width:${fillPct}%"></div>
+      <div class="pace-bar-fill ${statusCls}" style="width:${fillPct}%"></div>
       <div class="pace-marker" style="left:${markerPct}%"></div>
     </div>
     <div class="pace-stats">
