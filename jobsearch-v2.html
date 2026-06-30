@@ -493,10 +493,12 @@ function renderTimeCard(item, skillLog) {
 
   const startDate = logs.length ? logs[0].date : new Date();
   const today = new Date();
-  const daysElapsed = Math.min(totalDays, Math.max(1, Math.floor((today - startDate)/86400000) + 1));
-
+  const todayOffset = Math.floor((today - startDate) / 86400000);
+  // Ideal-so-far counts only fully completed past days, not today (today is still in progress)
+  const completedDays = Math.min(totalDays, Math.max(0, todayOffset));
+  const idealSoFar  = dailyTarget * completedDays;
   const actualTotal = logs.reduce((s,l) => s + l.minutes, 0);
-  const idealSoFar  = dailyTarget * daysElapsed;
+
   const fullTarget  = dailyTarget * totalDays;
 
   const fillPct = fullTarget > 0 ? Math.min(100, Math.round(actualTotal/fullTarget*100)) : 0;
@@ -514,7 +516,6 @@ function renderTimeCard(item, skillLog) {
   });
 
   let stripHtml = '';
-  const todayOffset = Math.floor((today - startDate) / 86400000);
   for (let i = 0; i < totalDays; i++) {
     const mins = dayMap[i] || 0;
     let cls = 'day-box';
