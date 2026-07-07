@@ -94,6 +94,8 @@
   .skill-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
   .skill-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .skill-type-tag{font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);background:var(--surface2);padding:2px 6px;border-radius:4px;flex-shrink:0;}
+  .skill-deadline{font-size:11px;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:4px;}
+  .skill-deadline .dl-val{color:var(--gold);font-weight:500;}
 
   /* count-type bar */
   .skill-bar-bg{background:var(--surface2);border-radius:4px;height:6px;margin-bottom:10px;overflow:hidden;}
@@ -201,6 +203,12 @@
   </div>
 </div>
 
+<!-- SKILL BUILDING -->
+<div class="section-label">Skill Building</div>
+<div class="skills-grid" id="skills-grid">
+  <div class="state-msg"><div class="spinner"></div></div>
+</div>
+
 <!-- DIAGNOSTIC BLOCK -->
 <div class="diag">
   <div class="pipeline-summary" id="pipeline-summary">
@@ -219,12 +227,6 @@
 <div class="section-label">Pipeline</div>
 <div class="kanban" id="kanban">
   <div class="state-msg" style="grid-column:1/-1;"><div class="spinner"></div></div>
-</div>
-
-<!-- SKILL BUILDING -->
-<div class="section-label">Skill Building</div>
-<div class="skills-grid" id="skills-grid">
-  <div class="state-msg"><div class="spinner"></div></div>
 </div>
 
 <!-- RULES -->
@@ -318,24 +320,35 @@ function parseFlexibleDate(val) {
   if (!val) return null;
   if (val instanceof Date) return val;
 
-  // Try native parsing first (handles ISO, "Jun 30 2026", "6/30/2026")
-  let d = new Date(val);
-  if (!isNaN(d)) return d;
+  const str = String(val).trim();
 
-  // Try "DD Mon YY" or "DD Mon YYYY" e.g. "30 Jun 26"
+  // ISO string from Google Sheets e.g. "2026-07-12T18:30:00.000Z"
+  // Parse as UTC timestamp then read local date parts to get correct local date
+  if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
+    const utc = new Date(str);
+    if (!isNaN(utc)) return new Date(utc.getFullYear(), utc.getMonth(), utc.getDate());
+  }
+
+  // Plain ISO date "2026-07-13"
+  const plainIso = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (plainIso) {
+    return new Date(parseInt(plainIso[1]), parseInt(plainIso[2]) - 1, parseInt(plainIso[3]));
+  }
+
+  // "DD Mon YY" or "DD Mon YYYY" e.g. "13 Jul 26"
   const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-  const match = String(val).trim().match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{2,4})$/);
+  const match = str.match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{2,4})$/);
   if (match) {
     const day = parseInt(match[1]);
     const mon = months[match[2].toLowerCase().slice(0,3)];
     let year = parseInt(match[3]);
     if (year < 100) year += 2000;
-    if (mon !== undefined) {
-      d = new Date(year, mon, day);
-      if (!isNaN(d)) return d;
-    }
+    if (mon !== undefined) return new Date(year, mon, day);
   }
-  return null;
+
+  // Fallback to native parsing
+  const d = new Date(val);
+  return isNaN(d) ? null : d;
 }
 
 // ── RENDER ──
@@ -464,6 +477,23 @@ function renderSkills(skillItems, skillLog) {
   });
 }
 
+function deadlineHtml(dateVal) {
+  if (!dateVal) return '';
+  const d = parseFlexibleDate(dateVal);
+  if (!d || isNaN(d)) return '';
+  // Compare at day level — strip time from today too
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const daysLeft = Math.ceil((target - today) / 86400000);
+  const label = target.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  let daysStr;
+  if (daysLeft < 0)        daysStr = `${Math.abs(daysLeft)}d overdue`;
+  else if (daysLeft === 0) daysStr = 'due today';
+  else                     daysStr = `${daysLeft}d to go`;
+  return `<div class="skill-deadline">📅 ${label} &nbsp;·&nbsp; <span class="dl-val">${daysStr}</span></div>`;
+}
+
 function renderCountCard(item) {
   const total = Number(item.total_count) || 0;
   const completed = Number(item.completed_count) || 0;
@@ -471,6 +501,7 @@ function renderCountCard(item) {
   const pct = total > 0 ? Math.round(completed/total*100) : 0;
   return `
     <div class="skill-name">${item.skill_item||'Unnamed'} <span class="skill-type-tag">Count</span></div>
+    ${deadlineHtml(item.target_end_date)}
     <div class="skill-pct">${pct}%</div>
     <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:${Math.min(100,pct)}%"></div></div>
     <div class="skill-stats">
@@ -537,6 +568,7 @@ function renderTimeCard(item, skillLog) {
 
   return `
     <div class="skill-name">${name||'Unnamed'} <span class="skill-type-tag">Time</span></div>
+    ${deadlineHtml(item.target_end_date)}
     <span class="pace-status ${statusCls}">${statusTxt}</span>
     <div class="pace-bar-bg">
       <div class="pace-bar-fill ${statusCls}" style="width:${fillPct}%"></div>
